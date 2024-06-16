@@ -1,0 +1,46 @@
+<configuration>
+
+    <!-- Console appender -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern level="WARN">%d{HH:mm:ss.SSS} [%thread] WARN  %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- SMTP appender for sending emails -->
+    <appender name="EMAIL" class="ch.qos.logback.classic.net.SMTPAppender">
+        <smtpHost>smtp.example.com</smtpHost>
+        <smtpPort>25</smtpPort>
+        <to>admin@example.com</to>
+        <from>app@example.com</from>
+        <subject>Error Log</subject>
+        <layout class="ch.qos.logback.classic.html.HTMLLayout" />
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <!-- Database appender -->
+    <appender name="DATABASE" class="ch.qos.logback.classic.db.DBAppender">
+        <connectionSource class="ch.qos.logback.core.db.DataSourceConnectionSource">
+            <dataSource class="com.mysql.jdbc.jdbc2.optional.MysqlDataSource">
+                <url>jdbc:mysql://localhost:3306/onlinetest</url>
+                <user>username</user>
+                <password>password</password>
+            </dataSource>
+        </connectionSource>
+    </appender>
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="DATABASE" />
+    </root>
+
+    <!-- Logger for sending email notifications -->
+    <logger name="com.example.onlinetesting.service.Logs.EmailLogService" level="ERROR">
+        <appender-ref ref="EMAIL" />
+    </logger>
+
+</configuration>
