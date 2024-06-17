@@ -14,8 +14,8 @@ import org.python.util.PythonInterpreter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -58,15 +58,15 @@ public class PythonServiceImpl implements PythonService{
             pythonScript = pythonScript.replaceAll(regex, replacement);
         }
         PythonInterpreter interpreter = new PythonInterpreter();
-        StringWriter outputWriter = new StringWriter();
-        interpreter.setOut(outputWriter);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        interpreter.setOut(new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8), true));
         String output = "";
         try {
             interpreter.exec(pythonScript);
-            output = outputWriter.toString();
+            output = new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
             test.setResult(true);
             testRepository.save(test);
-            return output;
+            return formatOutput(output);
         } catch (PyException e) {
             test.setResult(false);
             testRepository.save(test);
@@ -109,12 +109,20 @@ public class PythonServiceImpl implements PythonService{
             output = outputWriter.toString();
             test.setResult(true);
             testRepository.save(test);
-            return output;
+            return formatOutput(output);
         } catch (PyException e) {
             test.setResult(false);
             testRepository.save(test);
             return e.getMessage();
         }
+    }
+
+    private String formatOutput(String output) {
+        // Remove parentheses and all quotes from the output
+        output = output.replaceAll("[()]", "");  // Remove parentheses
+        output = output.replaceAll(", ", " ");   // Remove commas
+        output = output.replaceAll("[\"']", ""); // Remove all types of quotes
+        return output.trim();                    // Trim any leading or trailing whitespace
     }
 
     public List<Variable> fetchPythonCodeVar(CodeRequest codeRequest) throws IOException {
